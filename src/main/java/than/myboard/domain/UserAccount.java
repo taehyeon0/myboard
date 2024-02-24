@@ -1,9 +1,8 @@
 package than.myboard.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Objects;
@@ -18,15 +17,16 @@ import java.util.Objects;
 })
 @Entity
 public class UserAccount extends AuditingFields {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String userId;
-    private String userPassword;
+    @Setter @Column(nullable = false, length = 50) private String userId;
+    @Setter @Column(nullable = false) private String userPassword;
 
-    private String email;
-    private String nickname;
-    private String memo;
+    @Setter @Column(length = 100) private String email;
+    @Setter @Column(length = 100) private String nickname;
+    @Setter private String memo;
 
     protected UserAccount() {}
 
