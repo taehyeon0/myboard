@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import than.myboard.config.JpaConfig;
 import than.myboard.domain.Article;
+import than.myboard.domain.UserAccount;
 
 import java.util.List;
 
@@ -19,13 +20,16 @@ class JpaRepositoryTest {
 
     private final ArticleRepository articleRepository;
     private final ArticleCommentRepository articleCommentRepository;
+    private final UserAccountRepository userAccountRepository;
 
     public JpaRepositoryTest(
             @Autowired ArticleRepository articleRepository,
-            @Autowired ArticleCommentRepository articleCommentRepository
+            @Autowired ArticleCommentRepository articleCommentRepository,
+            @Autowired UserAccountRepository userAccountRepository
     ) {
         this.articleRepository = articleRepository;
         this.articleCommentRepository = articleCommentRepository;
+        this.userAccountRepository = userAccountRepository;
     }
 
     @DisplayName("select 테스트")
@@ -47,9 +51,11 @@ class JpaRepositoryTest {
     void givenTestData_whenUpdating_thenWorksFine() {
         // given
         long previousCount = articleRepository.count();
+        UserAccount userAccount = userAccountRepository.save(UserAccount.of("than", "pw", null, null, null));
+        Article article = Article.of(userAccount, "new article", "new content", "#spring");
 
         // when
-        articleRepository.save(Article.of("new article", "new content", "#spring"));
+        articleRepository.save(article);
 
         // then
         assertThat(articleRepository.count()).isEqualTo(previousCount + 1);
