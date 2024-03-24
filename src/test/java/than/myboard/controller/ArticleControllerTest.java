@@ -13,7 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import than.myboard.config.SecurityConfig;
+import than.myboard.domain.type.SearchType;
 import than.myboard.dto.ArticleWithCommentsDto;
 import than.myboard.dto.UserAccountDto;
 import than.myboard.service.ArticleService;
@@ -52,19 +54,38 @@ class ArticleControllerTest {
         given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(0, 1, 2, 3, 4));
 
         // when & then
-        mvc.perform(get("/articles"))
+        mvc.perform(get("/articles")).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML)).andExpect(view().name("articles/index")).andExpect(model().attributeExists("articles")).andExpect(model().attributeExists("paginationBarNumbers")).andExpect(model().attributeExists("searchTypes"));
+        then(articleService).should().searchArticles(eq(null), eq(null), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
+    }
+
+    @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 검색어와 함께 호출")
+    @Test
+    public void givenSearchKeyword_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
+        // given
+        SearchType searchType = SearchType.TITLE;
+        String searchValue = "title";
+        given(articleService.searchArticles(eq(searchType), eq(searchValue), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(0, 1, 2, 3, 4));
+
+        // when & then
+        mvc.perform(
+                        MockMvcRequestBuilders.get("/articles")
+                                .queryParam("searchType", searchType.name())
+                                .queryParam("searchValue", searchValue)
+                )
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(view().name("articles/index"))
                 .andExpect(model().attributeExists("articles"))
-                .andExpect(model().attributeExists("paginationBarNumbers"));
-        then(articleService).should().searchArticles(eq(null), eq(null), any(Pageable.class));
+                .andExpect(model().attributeExists("searchTypes"));
+        then(articleService).should().searchArticles(eq(searchType), eq(searchValue), any(Pageable.class));
         then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
     @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 페이징, 정렬 기능")
     @Test
-    public void givenPagingAndSortingParams_whenSearchingArticlesPage_thenReturnsArticlesPage() throws Exception {
+    public void givenPagingAndSortingParams_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
         // given
         String sortName = "title";
         String direction = "desc";
@@ -77,10 +98,10 @@ class ArticleControllerTest {
 
         // when & then
         mvc.perform(
-                        get("/articles")
-                                .queryParam("page", String.valueOf(pageNumber))
-                                .queryParam("size", String.valueOf(pageSize))
-                                .queryParam("sort", sortName + "," + direction)
+                get("/articles")
+                        .queryParam("page", String.valueOf(pageNumber))
+                        .queryParam("size", String.valueOf(pageSize))
+                        .queryParam("sort", sortName + "," + direction)
                 )
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
@@ -99,12 +120,7 @@ class ArticleControllerTest {
         given(articleService.getArticle(articleId)).willReturn(createArticleWithCommentsDto());
 
         // when & then
-        mvc.perform(get("/articles/" + articleId))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(view().name("articles/detail"))
-                .andExpect(model().attributeExists("article"))
-                .andExpect(model().attributeExists("articleComments"));
+        mvc.perform(get("/articles/" + articleId)).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML)).andExpect(view().name("articles/detail")).andExpect(model().attributeExists("article")).andExpect(model().attributeExists("articleComments"));
         then(articleService).should().getArticle(articleId);
     }
 
@@ -115,10 +131,7 @@ class ArticleControllerTest {
         // given
 
         // when & then
-        mvc.perform(get("/articles/search"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(model().attributeExists("articles/search"));
+        mvc.perform(get("/articles/search")).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML)).andExpect(model().attributeExists("articles/search"));
     }
 
     @Disabled("구현 중")
@@ -128,39 +141,14 @@ class ArticleControllerTest {
         // given
 
         // when & then
-        mvc.perform(get("/articles/search-hashtag"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(model().attributeExists("articles/search-hashtag"));
+        mvc.perform(get("/articles/search-hashtag")).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML)).andExpect(model().attributeExists("articles/search-hashtag"));
     }
 
     private ArticleWithCommentsDto createArticleWithCommentsDto() {
-        return ArticleWithCommentsDto.of(
-                1L,
-                createUserAccountDto(),
-                Set.of(),
-                "title",
-                "content",
-                "#java",
-                LocalDateTime.now(),
-                "than",
-                LocalDateTime.now(),
-                "than"
-        );
+        return ArticleWithCommentsDto.of(1L, createUserAccountDto(), Set.of(), "title", "content", "#java", LocalDateTime.now(), "than", LocalDateTime.now(), "than");
     }
 
     private UserAccountDto createUserAccountDto() {
-        return UserAccountDto.of(
-                1L,
-                "than",
-                "password",
-                "than@mail.com",
-                "Than",
-                "memo",
-                LocalDateTime.now(),
-                "than",
-                LocalDateTime.now(),
-                "than"
-        );
+        return UserAccountDto.of(1L, "than", "password", "than@mail.com", "Than", "memo", LocalDateTime.now(), "than", LocalDateTime.now(), "than");
     }
 }
