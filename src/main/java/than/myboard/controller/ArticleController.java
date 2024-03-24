@@ -1,6 +1,7 @@
 package than.myboard.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -14,6 +15,9 @@ import than.myboard.domain.type.SearchType;
 import than.myboard.dto.response.ArticleResponse;
 import than.myboard.dto.response.ArticleWithCommentsResponse;
 import than.myboard.service.ArticleService;
+import than.myboard.service.PaginationService;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/articles")
@@ -21,6 +25,7 @@ import than.myboard.service.ArticleService;
 public class ArticleController {
 
     private final ArticleService articleService;
+    private final PaginationService paginationService;
 
     @GetMapping
     public String articles(
@@ -28,7 +33,12 @@ public class ArticleController {
             @RequestParam(required = false) String searchValue,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             ModelMap map) {
-        map.addAttribute("articles", articleService.searchArticles(searchType, searchValue, pageable).map(ArticleResponse::from));
+        Page<ArticleResponse> articles = articleService.searchArticles(searchType, searchValue, pageable).map(ArticleResponse::from);
+        List<Integer> barNumbers = paginationService.getPaginationBarNumbers(pageable.getPageNumber(), articles.getTotalPages());
+
+        map.addAttribute("articles", articles);
+        map.addAttribute("paginationBarNumbers", barNumbers);
+
         return "articles/index";
     }
 
