@@ -79,7 +79,7 @@ public class ArticleController {
     @PostMapping("/form")
     public String postNewArticle(ArticleRequest articleRequest) {
         articleService.saveArticle(articleRequest.toDto(UserAccountDto.of(
-                "than", "q1w2e3r4", "than@gmail.com", "Than", "memo", null, null, null,  null
+                "than", "q1w2e3r4", "than@gmail.com", "Than", "memo"
         )));
 
         return "redirect:/articles";
@@ -98,7 +98,7 @@ public class ArticleController {
     @PostMapping("/{articleId}/form")
     public String updateArticle(@PathVariable Long articleId, ArticleRequest articleRequest) {
         articleService.updateArticle(articleId, articleRequest.toDto(UserAccountDto.of(
-                "than", "q1w2e3r4", "than@gmail.com", "Than", "memo", null, null, null,  null
+                "than", "q1w2e3r4", "than@gmail.com", "Than", "memo"
         )));
 
         return "redirect:/articles/" + articleId;
