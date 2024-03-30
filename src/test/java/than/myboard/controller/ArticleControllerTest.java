@@ -189,6 +189,6 @@ class ArticleControllerTest {
     }
 
     private UserAccountDto createUserAccountDto() {
-        return UserAccountDto.of(1L, "than", "password", "than@mail.com", "Than", "memo", LocalDateTime.now(), "than", LocalDateTime.now(), "than");
+        return UserAccountDto.of("than", "password", "than@mail.com", "Than", "memo", LocalDateTime.now(), "than", LocalDateTime.now(), "than");
     }
 }
