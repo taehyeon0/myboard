@@ -18,7 +18,7 @@ public class ArticleRepositoryCustomImpl extends QuerydslRepositorySupport imple
         return from(article)
                 .distinct()
                 .select(article.hashtag)
-                .where(article.hashtag.isNotEmpty())
+                .where(article.hashtag.isNotNull())
                 .fetch();
     }
 }
